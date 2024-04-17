@@ -3,42 +3,38 @@
 
 ## How to train
 ```console
-// for basic model
-$ python3 train.py --model ddpm
-
-// for conditonal diffusion model
-$ python3 train.py --model cond
+$ python3 train.py  --config 'config/unconditional_ddpm_with_dummy_eps.yaml'
 ```
 The trained state dict of model will be stored in output folder.
 
 ## How to inference
 The inferenced image will be stored in output folder.
 ```console
-// for basic model
-$ python3 inference.py --model ddpm
+$ 
 ```
 
-
-![basic](./sample_result/test_result.png)
-
-```console
-// for conditonal diffusion model
-$ python3 inference.py --model cond
-```
-
-
-![cond1](./sample_result/image_w0.0.png)
-![cond2](./sample_result/image_w0.0.png)
-![cond3](./sample_result/image_w0.0.png)
 
 ## Reference
 
-### Basice Diffusion Model source
+### DDPM
+https://github.com/explainingai-code/DDPM-Pytorch/tree/main
 https://github.com/cloneofsimo/minDiffusion
-
-### Conditional Diffusion Model source
 https://github.com/TeaPearce/Conditional_Diffusion_MNIST/tree/main
+
+https://jang-inspiration.com/ddpm-1
+https://xoft.tistory.com/32
+
+### LDM
+https://github.com/explainingai-code/StableDiffusion-PyTorch/tree/main
+
+
+https://arxiv.org/abs/2112.10752
+https://github.com/CompVis/latent-diffusion
 
 ## TODO
 
-- [ ] two image merging model
+- [ ] Unconditional DDPM with dummy eps model
+- [ ] Unconditional DDPM with UNET eps model
+- [ ] Conditional DDPM
+- [ ] Unconditional LDM
+- [ ] Conditional LDM

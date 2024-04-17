@@ -12,30 +12,30 @@ from torchvision.utils import save_image, make_grid
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
-
-
-#from model.simple_unet import SimpleUnet
-from models.ddpm import DDPM, DummyEpsModel
-from models.conditional_diffusion import ConditionalDiffusion, ContextUnet
-#from data_loader import load_transformed_dataset
-#from forward import ForwardDiffusion
+import yaml
 
 FLAGS = flags.FLAGS
-_MODEL = flags.DEFINE_enum(name = 'model', default = None, enum_values = ['ddpm', 'cond'], help = "model")
-#_MODE = flags.DEFINE_enum(name = 'mode', default = None, enum_values = ['train', 'eval'], help = "Running mode")
-#_EPOCHS = flags.DEFINE_integer('num_epochs', 10, 'Number of epochs for training.')
-# flags.DEFINE_float('learning_rate', 0.01, 'Learning rate for training.')
+_CONFIG = flags.DEFINE_string(name = 'config', default = None, help = "config_path")
 
 _ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 _DATA_DIR = os.path.join(_ROOT_DIR, 'data')
 _OUTPUT_DIR = os.path.join(_ROOT_DIR, 'output')
-_IMG_SIZE = 64
-_BATCH_SIZE = 128
-_EPOCHS = 20
-_LRATE = 1e-4
+
+
+def _read_config():
+    config = None
+    with open(_CONFIG.value, 'r') as file:
+        try:
+            config = yaml.safe_load(file)
+        except yaml.YAMLError as err:
+            print(err)
+    print(config)
+    return config
 
 def main(argv):
-    del argv
+    config = _read_config()
+    return
+
     os.makedirs(_OUTPUT_DIR, exist_ok=True)
     model_path = os.path.join(_OUTPUT_DIR, f"{_MODEL.value}.pth")
     device = "cuda" if torch.cuda.is_available() else "cpu"
