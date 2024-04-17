@@ -14,6 +14,9 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 import yaml
 
+from model.dummy_eps_model import DummyEpsModel
+from scheduler.linear_noise_scheduler import LinearNoiseScheduler
+
 FLAGS = flags.FLAGS
 _CONFIG = flags.DEFINE_string(name = 'config', default = None, help = "config_path")
 
@@ -33,36 +36,47 @@ def _read_config():
     return config
 
 def main(argv):
-    config = _read_config()
-    return
-
-    os.makedirs(_OUTPUT_DIR, exist_ok=True)
-    model_path = os.path.join(_OUTPUT_DIR, f"{_MODEL.value}.pth")
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    config = _read_config()
+    diffusion_config = config['diffusion_params']
+    dataset_config = config['dataset_params']
+    model_config = config['model_params']
+    train_config = config['train_params']
 
-    model = None
-    if _MODEL.value == "ddpm":
-        model = DDPM(eps_model=DummyEpsModel(1), betas=(1e-4, 0.02), n_T=1000)
-    elif _MODEL.value == "cond":
-        model = ConditionalDiffusion(nn_model=ContextUnet(in_channels=1, n_feat=128, n_classes=10), betas=(1e-4, 0.02), n_T=400, device=device, drop_prob=0.1)       
-    model.to(device)
+    # Create output directories
+    os.makedirs(_OUTPUT_DIR, exist_ok=True)
+    model_path = os.path.join(_OUTPUT_DIR, f"{_CONFIG.value.split('.')[0]}.pth")
 
+    # Create the noise scheduler
+    scheduler = LinearNoiseScheduler(num_timesteps=diffusion_config['num_timesteps'],
+                                     beta_start=diffusion_config['beta_start'],
+                                     beta_end=diffusion_config['beta_end'])
+
+
+
+    # Create the dataset
     tf = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize((0.5,), (1.0))]
     )
-
     dataset = MNIST(
-        "./data",
+        dataset_config['im_path'],
         train=True,
         download=True,
         transform=tf,
     )
-    dataloader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=20)
-    optim = torch.optim.Adam(model.parameters(), lr=_LRATE)
+    dataloader = DataLoader(dataset, batch_size=train_config['batch_size'], shuffle=True, num_workers=20)
 
+    # Create the model
+    model = None
+    if model_config['name'] == "dummy_eps_model":
+        model = DummyEpsModel(model_config)
+    model.to(device)
+    model.train()
+
+    optim = torch.optim.Adam(model.parameters(), lr=train_config["lr"])
+
+    # TODO: from here
     for i in range(_EPOCHS):
-        model.train()
-
         # linear lrate decay
         optim.param_groups[0]['lr'] = _LRATE*(1-i/_EPOCHS)
 

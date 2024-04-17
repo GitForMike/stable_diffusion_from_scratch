@@ -1,1 +1,15 @@
-model: dummy_eps_model
+dataset_params:
+  im_path: 'data'
+
+diffusion_params:
+  num_timesteps: 1000
+  beta_start: 0.0001
+  beta_end: 0.02
+
+model_params:
+  name: dummy_eps_model
+  n_channel: 1
+
+train_params:
+  lr: 0.0001
+  batch_size: 64

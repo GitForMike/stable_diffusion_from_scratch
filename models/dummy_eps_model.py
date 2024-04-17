@@ -15,8 +15,9 @@ class DummyEpsModel(nn.Module):
     Basically, any universal R^n -> R^n model should work.
     """
 
-    def __init__(self, n_channel: int) -> None:
-        super(DummyEpsModel, self).__init__()
+    def __init__(self, model_config) -> None:
+        super().__init__()
+        n_channel = model_config['n_channel']
         self.conv = nn.Sequential(  # with batchnorm
             blk(n_channel, 64),
             blk(64, 128),
