@@ -2,14 +2,15 @@
 
 
 ## How to train
-```console
-$ python3 train.py  --config 'config/unconditional_ddpm_with_dummy_eps.yaml'
+```bash
+$ python3 train.py --config 'config/unconditional_ddpm_with_dummy_eps.yaml'
+$ python3 train.py --config 'config/unconditional_ddpm_with_unet.yaml'
 ```
 The trained state dict of model will be stored in output folder.
 
 ## How to inference
 The inferenced image will be stored in output folder.
-```console
+```bash
 $ 
 ```
 
