@@ -12,11 +12,11 @@ from torchvision.utils import save_image, make_grid
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
-import yaml
 
 from models.dummy_eps_model import DummyEpsModel
 from models.unet import Unet
 from scheduler.linear_noise_scheduler import LinearNoiseScheduler
+from utils.file import read_yaml_file
 
 FLAGS = flags.FLAGS
 _CONFIG = flags.DEFINE_string(name = 'config', default = None, help = "config_path")
@@ -25,20 +25,9 @@ _ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 _DATA_DIR = os.path.join(_ROOT_DIR, 'data')
 _OUTPUT_DIR = os.path.join(_ROOT_DIR, 'output')
 
-
-def _read_config():
-    config = None
-    with open(_CONFIG.value, 'r') as file:
-        try:
-            config = yaml.safe_load(file)
-        except yaml.YAMLError as err:
-            print(err)
-    print(config)
-    return config
-
 def main(argv):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    config = _read_config()
+    config = read_yaml_file(_CONFIG.value)
     diffusion_config = config['diffusion_params']
     dataset_config = config['dataset_params']
     model_config = config['model_params']
@@ -70,9 +59,10 @@ def main(argv):
     # Create the model
     model = None
     if model_config['name'] == "dummy_eps_model":
-        model = DummyEpsModel(model_config).to(device)
+        model = DummyEpsModel(model_config)
     elif model_config['name'] == "unet":
-        model = Unet(model_config).to(device)
+        model = Unet(model_config)
+    model = model.to(device)
     model.train()
 
     # Run training
@@ -84,31 +74,31 @@ def main(argv):
 
         pbar = tqdm(dataloader)
         loss_ema = None
-        for x, c in pbar:
+        for im, c in pbar:
             optim.zero_grad()
-            x = x.to(device)
+            im = im.to(device)
             #c = c.to(device)
 
             # Sample random noise
-            noise = torch.randn_like(x).to(device)
+            noise = torch.randn_like(im).to(device)
 
             # Sample timestamp
-            # _ts = torch.randint(1, self.n_T + 1, (x.shape[0],)).to(x.device)
-            t = torch.randint(0, diffusion_config['num_timesteps'], (x.shape[0],)).to(device)
+            # _ts = torch.randint(1, self.n_T + 1, (im.shape[0],)).to(im.device)
+            t = torch.randint(0, diffusion_config['num_timesteps'], (im.shape[0],)).to(device)
 
             # Add noise to images according to timestep
-            noisy_im = scheduler.add_noise(x, noise, t)
+            noisy_im = scheduler.add_noise(im, noise, t)
             noise_pred = model(noisy_im, t)
 
             loss = criterion(noise_pred, noise)
             loss.backward()
-            #loss = model(x)
+            #loss = model(im)
 
             '''
             if _MODEL.value == "ddpm":
-                loss = model(x)
+                loss = model(im)
             elif _MODEL.value == "cond":
-                loss = model(x,c)
+                loss = model(im,c)
             '''
             
             if loss_ema is None:
