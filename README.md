@@ -36,8 +36,8 @@ https://github.com/CompVis/latent-diffusion
 
 ## TODO
 
-- [ ] Unconditional DDPM with dummy eps model
-- [ ] Unconditional DDPM with UNET eps model
+- [x] Unconditional DDPM with dummy eps model
+- [x] Unconditional DDPM with UNET eps model
 - [ ] Conditional DDPM
 - [ ] Unconditional LDM
 - [ ] Conditional LDM
