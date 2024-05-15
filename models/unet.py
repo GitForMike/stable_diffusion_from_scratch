@@ -49,11 +49,11 @@ class SinusoidalPositionEmbeddings(nn.Module):
         return embeddings
 
 
-class SimpleUnet(nn.Module):
+class Unet(nn.Module):
     """
     A simplified variant of the Unet architecture.
     """
-    def __init__(self):
+    def __init__(self, model_config):
         super().__init__()
         image_channels = 3
         down_channels = (64, 128, 256, 512, 1024)

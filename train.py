@@ -14,7 +14,8 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 import yaml
 
-from model.dummy_eps_model import DummyEpsModel
+from models.dummy_eps_model import DummyEpsModel
+from models.unet import Unet
 from scheduler.linear_noise_scheduler import LinearNoiseScheduler
 
 FLAGS = flags.FLAGS
@@ -45,7 +46,7 @@ def main(argv):
 
     # Create output directories
     os.makedirs(_OUTPUT_DIR, exist_ok=True)
-    model_path = os.path.join(_OUTPUT_DIR, f"{_CONFIG.value.split('.')[0]}.pth")
+    model_path = os.path.join(_OUTPUT_DIR, f"{os.path.basename(_CONFIG.value).split('.')[0]}.pth")
 
     # Create the noise scheduler
     scheduler = LinearNoiseScheduler(num_timesteps=diffusion_config['num_timesteps'],
@@ -69,29 +70,47 @@ def main(argv):
     # Create the model
     model = None
     if model_config['name'] == "dummy_eps_model":
-        model = DummyEpsModel(model_config)
-    model.to(device)
+        model = DummyEpsModel(model_config).to(device)
+    elif model_config['name'] == "unet":
+        model = Unet(model_config).to(device)
     model.train()
 
+    # Run training
     optim = torch.optim.Adam(model.parameters(), lr=train_config["lr"])
-
-    # TODO: from here
-    for i in range(_EPOCHS):
+    criterion = torch.nn.MSELoss()    
+    for epoch_idx in range(train_config['num_epochs']):
         # linear lrate decay
-        optim.param_groups[0]['lr'] = _LRATE*(1-i/_EPOCHS)
+        optim.param_groups[0]['lr'] = train_config["lr"]*(1-epoch_idx/train_config['num_epochs'])
 
         pbar = tqdm(dataloader)
         loss_ema = None
         for x, c in pbar:
             optim.zero_grad()
             x = x.to(device)
-            c = c.to(device)
+            #c = c.to(device)
+
+            # Sample random noise
+            noise = torch.randn_like(x).to(device)
+
+            # Sample timestamp
+            # _ts = torch.randint(1, self.n_T + 1, (x.shape[0],)).to(x.device)
+            t = torch.randint(0, diffusion_config['num_timesteps'], (x.shape[0],)).to(device)
+
+            # Add noise to images according to timestep
+            noisy_im = scheduler.add_noise(x, noise, t)
+            noise_pred = model(noisy_im, t)
+
+            loss = criterion(noise_pred, noise)
+            loss.backward()
+            #loss = model(x)
+
+            '''
             if _MODEL.value == "ddpm":
                 loss = model(x)
             elif _MODEL.value == "cond":
                 loss = model(x,c)
-
-            loss.backward()
+            '''
+            
             if loss_ema is None:
                 loss_ema = loss.item()
             else:

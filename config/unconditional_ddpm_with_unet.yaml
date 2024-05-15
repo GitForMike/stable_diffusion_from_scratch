@@ -7,7 +7,7 @@ diffusion_params:
   beta_end: 0.02
 
 model_params:
-  name: dummy_eps_model
+  name: unet
   n_channel: 1
 
 train_params:
