@@ -13,7 +13,7 @@ The trained state dict of model will be stored in output folder.
 ## How to inference
 The inferenced image will be stored in output folder.
 ```bash
-$ 
+$ python3 inference.py --config 'config/unconditional_ddpm_with_unet.yaml'
 ```
 
 
